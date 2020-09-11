@@ -3,7 +3,7 @@ let baseConfig = require('./base.webpack.config');
 module.exports = {
     ...baseConfig,
     entry: {
-        client: "./src/client",
+        client: ['@babel/polyfill', './src/client']
     },
     output: {
         filename: "public/js/[name].js",

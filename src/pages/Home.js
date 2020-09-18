@@ -3,13 +3,18 @@ import fetch from 'isomorphic-fetch';
 
 function Home(props) {
 
-    return <div>{
-        props.data.data.map(
-            item => {
-                return <div key={item.id}>{item.employee_name}</div>
-            }
-        )
-    }</div>
+    let data = props.data ? props.data.data : [];
+
+    return <div>
+        2
+        {
+            data.map(
+                item => {
+                    return <div key={item.id}>{item.employee_name}</div>
+                }
+            )
+        }
+    </div>
 }
 
 Home.loadData = async () => {

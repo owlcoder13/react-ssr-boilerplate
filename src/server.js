@@ -25,8 +25,6 @@ app.get('/*', function (req, res) {
         promise = Promise.resolve(null);
     }
 
-
-
     promise.then(data => {
 
         let appRender = <StaticRouter location={req.url} context={{}}>

@@ -34,25 +34,28 @@ let devMiddleware = webpackDevMiddleware(clientCompiler, {
     noInfo: false,
     publicPath: clientConfig.output.publicPath,
     writeToDisk: true,
-    // outputFileSystem: fs
+
 });
 
 devMiddleware.fs = fs;
 
 let hotMiddleware = webpackHotMiddleware(clientCompiler, {
-    'log': console.log,
+    // 'log': console.log,
     // 'path': '/__webpack_hmr',
-    'heartbeat': 10 * 1000,
-
+    // 'heartbeat': 10 * 1000,
 });
 
-serverCompiler.run(() => {
-    app = require('./dist/server').default;
+function initApp(app) {
     app.use(devMiddleware)
     app.use(hotMiddleware)
+}
 
-    server = http.createServer(app);
+serverCompiler.run(() => {
+    let createApp = require('./dist/server').default;
+
+    app = createApp({ init: initApp })
     let currentApp = app
+    server = http.createServer(app);
     server.listen(3000);
 
     serverCompiler.watch({}, (err, stats) => {
@@ -62,18 +65,17 @@ serverCompiler.run(() => {
         }
 
         delete require.cache[require.resolve('./dist/server')];
+        createApp = require('./dist/server').default;
 
-        let app = require('./dist/server').default;
-        app.use(devMiddleware)
-        app.use(hotMiddleware)
+        app = createApp({ init: initApp })
 
         server.removeListener('request', currentApp)
         server.on('request', app)
         currentApp = app
     })
+
+    return app;
 })
-
-
 
 
 // serverCompiler.watch({}, (err, stats) => {

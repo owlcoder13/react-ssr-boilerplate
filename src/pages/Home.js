@@ -6,7 +6,7 @@ function Home(props) {
     let data = props.data ? props.data.data : [];
 
     return <div>
-        2
+        1
         {
             data.map(
                 item => {

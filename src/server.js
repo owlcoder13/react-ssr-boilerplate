@@ -7,39 +7,40 @@ import { StaticRouter, matchPath } from 'react-router-dom';
 import routes from "./routes";
 import App from './components/App'
 
-console.log('load module here')
+export default function createApp({ init }) {
+    const app = express()
 
-const app = express()
+    app.use(express.static(path.resolve('./dist/public')));
 
-app.use(express.static(path.resolve('./dist/public')));
+    init(app);
 
-app.get('/*', function (req, res) {
+    app.get('*', function (req, res) {
+        const currentRoute = routes.find(route => matchPath(req.url, route)) || {};
 
-    const currentRoute = routes.find(route => matchPath(req.url, route)) || {};
+        let promise;
 
-    let promise;
+        if (currentRoute.component.loadData) {
+            promise = currentRoute.component.loadData()
+        } else {
+            promise = Promise.resolve(null);
+        }
 
-    if (currentRoute.component.loadData) {
-        promise = currentRoute.component.loadData()
-    } else {
-        promise = Promise.resolve(null);
-    }
+        promise.then(data => {
 
-    promise.then(data => {
+            let appRender = <StaticRouter location={req.url} context={{}}>
+                <App data={data} />
+            </StaticRouter>
 
-        let appRender = <StaticRouter location={req.url} context={{}}>
-            <App data={data} />
-        </StaticRouter>
-
-        let html = ReactDOMServer.renderToString(
-            <Html
-                data={data}
-                html={appRender}
-                req={req}
-            />
-        )
-        res.end(html);
+            let html = ReactDOMServer.renderToString(
+                <Html
+                    data={data}
+                    html={appRender}
+                    req={req}
+                />
+            )
+            res.end(html);
+        })
     })
-})
 
-export default app;
+    return app;
+}

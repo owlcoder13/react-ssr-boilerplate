@@ -1,11 +1,12 @@
 import express from 'express';
 import ReactDOMServer from 'react-dom/server';
 import React from 'react';
-import Html from './components/Html';
+import renderHtml from './renderHtml';
 import path from 'path'
-import { StaticRouter, matchPath } from 'react-router-dom';
-import routes from "./routes";
-import App from './components/App'
+import apiRoutes from './api/index';
+import renderApp from "./renderApp";
+import { Helmet } from 'react-helmet';
+import { ServerStyleSheet, StyleSheetManager } from 'styled-components'
 
 export default function createApp({ init }) {
     const app = express()
@@ -14,32 +15,33 @@ export default function createApp({ init }) {
 
     init(app);
 
-    app.get('*', function (req, res) {
-        const currentRoute = routes.find(route => matchPath(req.url, route)) || {};
+    app.use(apiRoutes);
 
-        let promise;
+    app.get('*', async function (req, res) {
+        let [renderedApp, data] = await renderApp(req.url)
 
-        if (currentRoute.component.loadData) {
-            promise = currentRoute.component.loadData()
-        } else {
-            promise = Promise.resolve(null);
-        }
+        const sheet = new ServerStyleSheet()
 
-        promise.then(data => {
+        try {
+            let output = ReactDOMServer.renderToString(sheet.collectStyles(renderedApp));
+            const styleTags = sheet.getStyleTags() // or sheet.getStyleElement();
 
-            let appRender = <StaticRouter location={req.url} context={{}}>
-                <App data={data} />
-            </StaticRouter>
+            const helmet = Helmet.renderStatic();
 
-            let html = ReactDOMServer.renderToString(
-                <Html
-                    data={data}
-                    html={appRender}
-                    req={req}
-                />
-            )
+            let html = renderHtml({
+                html: output,
+                req: req,
+                data: data,
+                helmet: helmet,
+                styles: styleTags
+            });
+
             res.end(html);
-        })
+        } catch (error) {
+            res.end('500' + error.toString());
+        } finally {
+            sheet.seal()
+        }
     })
 
     return app;

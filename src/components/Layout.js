@@ -28,6 +28,7 @@ export default function Layout(props) {
         <Nav>
             <Link href={'/'}>Home</Link>
             <Link href={'/contacts'}>Contacts</Link>
+            <Link href={'/login'}>Login</Link>
         </Nav>
         <Content>
             {children}

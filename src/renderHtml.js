@@ -6,11 +6,17 @@ export default function renderHtml(props) {
 
     return `<html>
     <head>
+        <meta charset="utf-8"/>
         ${helmet.meta.toString()}
         ${helmet.title.toString()}
+        
         <style>
             * {
-              margin: 0;   
+                margin: 0;   
+            }
+            
+            h1 {
+                margin-bottom: 20px;;
             }
         </style>
         ${styles}
